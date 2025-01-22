@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management Software</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background for the body */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #1e1e1e; /* Darker header background */
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr; /* Three columns */
+            max-width: 900px;
+            margin: 20px auto;
+            background: #282828; /* Dark background for the container */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Slightly lighter shadow */
+            padding: 20px;
+        }
+
+        .advertisement {
+            background-color: #3a3a3a; /* Darker background for advertisements */
+            padding: 10px;
+            border-radius: 8px;
+            margin: 0 10px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1); /* Subtle light shadow */
+        }
+
+        .main-content {
+            padding: 0 10px;
+        }
+
+        h1, h2 {
+            color: #ffeb3b; /* Yellow color for headings */
+        }
+
+        .event-form {
+            margin-bottom: 20px;
+        }
+
+        input, textarea, button {
+            width: calc(100% - 22px); /* Adjust width for padding */
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #555; /* Darker border */
+            border-radius: 4px;
+            background-color: #3a3a3a; /* Input field background */
+            color: #e0e0e0; /* Input text color */
+        }
+
+        button {
+            background: #007bff; /* Bright button color */
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3; /* Darker button hover color */
+        }
+
+        .event-list {
+            margin-top: 20px;
+        }
+
+        .event-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .event-list li {
+            background: #444; /* Background for event items */
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px 0;
+            background-color: #1e1e1e; /* Footer background */
+        }
+
+        .graphic {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Event Management Software</h1>
+    </header>
+
+    <div class="container">
+        <div class="advertisement">
+            <h2>Birthday Party Services!</h2>
+            <p>Throw an unforgettable birthday party with our exclusive services. From theme decorations to catering, we handle it all!</p>
+            <p><strong>Special offer: Get 20% off your first booking!</strong></p>
+        </div>
+
+        <div class="main-content">
+            <div class="graphic">Manage Your Events Efficiently!</div>
+            
+            <div class="event-form">
+                <h2>Create an Event</h2>
+                <input type="text" id="eventName" placeholder="Event Name" required>
+                <input type="date" id="eventDate" required>
+                <input type="text" id="eventLocation" placeholder="Location" required>
+                <textarea id="eventDescription" placeholder="Description" required></textarea>
+                <button id="addEventButton">Add Event</button>
+            </div>
+            
+            <div class="event-list">
+                <h2>Upcoming Events</h2>
+                <ul id="events"></ul>
+            </div>
+        </div>
+
+        <div class="advertisement">
+            <h2>Anniversary Packages!</h2>
+            <p>Celebrate your love with our dedicated anniversary packages. Enjoy romantic setups, dining experiences, and more!</p>
+            <p><strong>Exclusive: Book now for a complimentary dessert!</strong></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Event Management Software. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('addEventButton').addEventListener('click', function() {
+		// Get values from input fields
+		const eventName = document.getElementById('eventName').value;
+		const eventDate = document.getElementById('eventDate').value;
+		const eventLocation = document.getElementById('eventLocation').value;
+		const eventDescription = document.getElementById('eventDescription').value;
+
+		// Validate input fields
+    if (eventName === '' || eventDate === '' || eventLocation === '' || eventDescription === '') {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Create a new list item for the event
+    const eventItem = document.createElement('li');
+    eventItem.innerHTML = `
+        <strong>${eventName}</strong> <br>
+        Date: ${eventDate} <br>
+        Location: ${eventLocation} <br>
+        Description: ${eventDescription} <br>
+        <button class="delete-button">Delete</button>
+    `;
+
+    // Add the event item to the events list
+    document.getElementById('events').appendChild(eventItem);
+
+    // Clear input fields
+    document.getElementById('eventName').value = '';
+    document.getElementById('eventDate').value = '';
+    document.getElementById('eventLocation').value = '';
+    document.getElementById('eventDescription').value = '';
+
+    // Add delete functionality
+    const deleteButton = eventItem.querySelector('.delete-button');
+    deleteButton.addEventListener('click', function() {
+        if (confirm('Are you sure you want to delete this event?')) {
+            eventItem.remove(); // Remove the event item from the DOM
+        }
+    });
+});
+    </script>
+</body>
+</html>
