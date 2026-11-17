@@ -1,138 +1,823 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Testing Data Sheet - Form</title>
+    <title>Лист данных ручного тестирования — форма</title>
+
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        /* Dark gradient background */
-        background: linear-gradient(to bottom right, #8B4513, #333333, #B22222);
-        color: #f0f0f0; /* Light text color for contrast */
-        margin-top: 20px;
-    }
 
-    .container-fluid {
-        background-color: rgba(50, 50, 50, 0.8); /* Slightly transparent dark background */
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        padding: 30px; /* Increased padding for spacing */
-        margin: 30px auto; /* Increased margin for top and bottom spacing */
-    }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    h1 {
-        text-align: center;
-        color: #FFD700; /* Gold color for heading */
-        margin-bottom: 20px;
-    }
+    <style>
+        :root {
+            --bg-0: #0e0a08;
+            --panel: rgba(26, 20, 16, 0.72);
+            --line: rgba(255, 209, 102, 0.14);
+            --line-strong: rgba(255, 209, 102, 0.32);
+            --gold: #FFD166;
+            --gold-soft: #E8C07A;
+            --amber: #E0A458;
+            --text: #F3EAE0;
+            --muted: #B9A897;
+            --danger: #E5484D;
+            --success: #2FBF71;
+        }
 
-    .summary-table {
-        margin-top: 20px;
-        width: 100%;
-        border-collapse: collapse; /* Ensures proper border collapse */
-        table-layout: fixed; /* Enforce consistent sizing of columns */
-        font-size: 0.9rem; /* Base font size for the table */
-    }
+        * { box-sizing: border-box; }
 
-    .summary-table th,
-    .summary-table td {
-        border: 1px solid #555; /* Darker border for table */
-        padding: 10px; /* Consistent padding */
-        text-align: center;
-        overflow: hidden; /* Prevent content overflow */
-        white-space: nowrap; /* Prevent wrapping, if applicable */
-    }
+        html, body { height: 100%; }
 
-    .summary-table th {
-        background-color: #007bff; /* Blue header background */
-        color: white;
-        font-size: 1rem; /* Slightly larger font for headers */
-    }
+        body {
+            margin: 0;
+            padding: 28px 18px 60px;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            background: linear-gradient(160deg, #2a1a10 0%, #120d0a 45%, #1b0f0d 100%);
+            -webkit-font-smoothing: antialiased;
+        }
 
-    /* Adjust to smaller font size for table cells on smaller screens */
-    @media (max-width: 600px) {
+        /* WebGL background canvas */
+        #bg-gl {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* ============================= PANEL ============================= */
+        .container-fluid {
+            position: relative;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 36px 36px 44px;
+            background: var(--panel);
+            backdrop-filter: blur(14px) saturate(120%);
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, .55),
+                inset 0 1px 0 rgba(255, 255, 255, .04);
+        }
+
+        .container-fluid::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 2px;
+            border-radius: 18px 18px 0 0;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: .55;
+        }
+
+        /* ============================= HEADINGS ============================= */
+        h1 {
+            margin: 0 0 28px;
+            text-align: center;
+            font-size: clamp(1.4rem, 2.2vw, 2rem);
+            font-weight: 800;
+            letter-spacing: .01em;
+            background: linear-gradient(180deg, #FFF1CC, var(--gold) 55%, var(--amber));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            filter: drop-shadow(0 2px 18px rgba(255, 180, 80, .25));
+        }
+
+        form > h1 {
+            text-align: left;
+            font-size: 1.1rem;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin: 38px 0 16px;
+            padding-left: 14px;
+            border-left: 3px solid var(--gold);
+            filter: none;
+        }
+
+        /* ============================= FORM FIELDS ============================= */
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .field-full { grid-column: 1 / -1; }
+
+        @media (max-width: 720px) {
+            .field-grid { grid-template-columns: 1fr; }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        label {
+            margin-bottom: 6px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--gold-soft);
+        }
+
+        label strong { font-weight: 700; }
+
+        .form-control {
+            width: 100%;
+            padding: .55rem .75rem;
+            background: rgba(12, 9, 7, 0.55);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: .9rem;
+            line-height: 1.45;
+            transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+
+        .form-control::placeholder { color: rgba(200, 180, 160, .4); }
+
+        .form-control:hover:not(:focus) {
+            border-color: rgba(255, 209, 102, .25);
+        }
+
+        .form-control:focus {
+            outline: none;
+            background: rgba(18, 13, 10, .82);
+            border-color: var(--gold);
+            box-shadow:
+                0 0 0 .2rem rgba(255, 209, 102, .16),
+                0 0 22px rgba(255, 180, 80, .12);
+            color: #fff;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 44px;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        select.form-control option {
+            background: #1a1410;
+            color: var(--text);
+        }
+
+        /* File input */
+        input[type="file"].form-control-file {
+            width: 100%;
+            font-size: .74rem;
+            color: var(--muted);
+        }
+
+        input[type="file"]::file-selector-button {
+            margin-right: 8px;
+            padding: 5px 10px;
+            font-size: .74rem;
+            font-weight: 700;
+            color: var(--gold);
+            background: rgba(255, 209, 102, .12);
+            border: 1px solid rgba(255, 209, 102, .35);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background .18s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: rgba(255, 209, 102, .26);
+        }
+
+        .file-status {
+            display: block;
+            margin-top: 6px;
+            font-size: .72rem;
+            line-height: 1.25;
+            color: #7EE2A8;
+            word-break: break-word;
+        }
+
+        /* ============================= TOOLBAR & BUTTONS ============================= */
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 26px 0 14px;
+        }
+
+        .add-button,
+        .clear-button,
+        .btn-download,
+        input[type="submit"].btn-success {
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 18px;
+            font-family: inherit;
+            font-size: .86rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+            cursor: pointer;
+            transition: transform .12s ease, box-shadow .2s ease, filter .2s ease,
+                        background .2s ease, color .2s ease, border-color .2s ease;
+        }
+
+        .add-button {
+            color: #2a1a0a;
+            background: linear-gradient(180deg, #FFD98A, var(--amber));
+            box-shadow:
+                0 8px 22px rgba(224, 164, 88, .28),
+                inset 0 1px 0 rgba(255, 255, 255, .5);
+        }
+
+        .add-button:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+            box-shadow:
+                0 12px 28px rgba(224, 164, 88, .38),
+                inset 0 1px 0 rgba(255, 255, 255, .6);
+        }
+
+        .add-button:active { transform: translateY(0); }
+
+        .clear-button {
+            color: var(--muted);
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, .14);
+        }
+
+        .clear-button:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .05);
+        }
+
+        input[type="submit"].btn-success {
+            width: 100%;
+            margin-top: 30px;
+            padding: 14px 18px;
+            color: #06130b;
+            font-weight: 800;
+            background: linear-gradient(180deg, #43D68A, var(--success));
+            box-shadow:
+                0 10px 26px rgba(47, 191, 113, .25),
+                inset 0 1px 0 rgba(255, 255, 255, .35);
+        }
+
+        input[type="submit"].btn-success:hover {
+            filter: brightness(1.07);
+            transform: translateY(-1px);
+        }
+
+        .btn-download {
+            display: block;
+            margin: 22px auto 0;
+            padding: 12px 22px;
+            color: #06130b;
+            background: linear-gradient(180deg, #43D68A, var(--success));
+            box-shadow: 0 10px 26px rgba(47, 191, 113, .25);
+        }
+
+        .btn-download:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); }
+        .btn-download:disabled { opacity: .55; cursor: not-allowed; }
+
+        .remove-button {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: .76rem;
+            font-weight: 700;
+            color: #FF9AA0;
+            background: transparent;
+            border: 1px solid rgba(229, 72, 77, .45);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease, border-color .18s ease;
+        }
+
+        .remove-button:hover:not(:disabled) {
+            color: #fff;
+            background: rgba(229, 72, 77, .16);
+            border-color: rgba(229, 72, 77, .8);
+        }
+
+        .remove-button:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        /* ============================= TABLE ============================= */
+        .table-responsive {
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(10, 8, 6, .35);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 209, 102, .35) transparent;
+        }
+
         .summary-table {
-            font-size: 0.8rem; /* Smaller base font size for mobile */
+            width: 100%;
+            min-width: 1250px;
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: .85rem;
+            color: var(--text);
         }
 
-        .summary-table th,
+        .summary-table th {
+            padding: 12px 8px;
+            font-size: .7rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--gold-soft);
+            background: linear-gradient(180deg, #2a201a, #1d1611);
+            border-bottom: 1px solid var(--line-strong);
+            border-right: 1px solid rgba(255, 255, 255, .04);
+            white-space: normal;
+            vertical-align: middle;
+            text-align: center;
+        }
+
         .summary-table td {
-            padding: 8px; /* Optional: reduce padding for small screens */
+            padding: 8px;
+            text-align: center;
+            vertical-align: top;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            border-right: 1px solid rgba(255, 255, 255, .03);
         }
-    }
 
-    .summary-table tr:nth-child(even) {
-        background-color: rgba(100, 100, 100, 0.5); /* Darker gray for even rows */
-    }
+        .summary-table tbody tr { transition: background .15s ease; }
+        .summary-table tbody tr:nth-child(even) { background: rgba(255, 255, 255, .018); }
+        .summary-table tbody tr:hover { background: rgba(255, 209, 102, .05); }
+        .summary-table tbody tr:nth-child(even):hover { background: rgba(255, 209, 102, .065); }
 
-    .remove-button {
-        color: white;
-        background-color: #dc3545; /* Remove button color */
-        cursor: pointer;
-    }
+        .summary-table .row-number {
+            padding-top: 14px;
+            font-weight: 800;
+            color: var(--gold-soft);
+        }
 
-    .add-button {
-        display: inline-block; /* Better layout with inline */
-        margin-top: 20px;
-        padding: 10px 15px;
-        background-color: #007bff; /* Button color */
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
+        .summary-table textarea.form-control {
+            font-size: .8rem;
+            min-height: 40px;
+        }
 
-    .btn-download {
-        display: block; /* For centering */
-        margin: 20px auto;
-        padding: 10px 15px;
-        background-color: #28a745; /* Download button color */
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        text-align: center;
-    }
+        /* ============================= COUNTERS ============================= */
+        .counter-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
 
-    .table {
-        table-layout: auto;
-    }
-</style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.debug.js"></script>
+        @media (max-width: 720px) {
+            .counter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        .counter {
+            padding: .4rem .5rem;
+            min-height: 0;
+            resize: none;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--gold);
+            background: rgba(255, 209, 102, .06);
+            border-color: rgba(255, 209, 102, .2);
+            cursor: default;
+        }
+
+        /* ============================= REPORT ============================= */
+        #reportSection {
+            display: none;
+            max-width: 1100px;
+            margin: 0 auto 60px;
+            padding: 28px;
+            color: #222;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+        }
+
+        #reportSection h1 {
+            margin-bottom: 18px;
+            font-size: 1.5rem;
+            text-align: left;
+            color: #222;
+            background: none;
+            -webkit-text-fill-color: #222;
+            filter: none;
+        }
+
+        #reportContent {
+            padding: 10px 4px;
+            color: #000;
+            background: #ffffff;
+        }
+
+        #reportContent h4,
+        #reportContent h5 { color: #000; }
+
+        #reportContent p { margin-bottom: 10px; }
+
+        /* ============================= SCROLLBARS ============================= */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, .3); }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 209, 102, .25);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 209, 102, .45); }
+
+        @media (max-width: 640px) {
+            .container-fluid { padding: 24px 18px 32px; }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="bg-gl"></canvas>
+
+    <div class="container-fluid">
+        <h1>Форма листа данных ручного тестирования</h1>
+
+        <form id="testForm">
+
+            <div class="field-grid">
+                <div class="field field-full">
+                    <label for="product_name"><strong>Название продукта</strong></label>
+                    <textarea class="form-control" id="product_name" name="product_name" rows="2" required></textarea>
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label for="tc_start_date"><strong>Дата начала разработки тест-кейсов</strong></label>
+                    <textarea class="form-control" id="tc_start_date" name="tc_start_date" rows="2"
+                        placeholder="дд.мм.гггг" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="tc_execution_start_date"><strong>Дата начала выполнения тест-кейсов</strong></label>
+                    <textarea class="form-control" id="tc_execution_start_date" name="tc_execution_start_date"
+                        rows="2" placeholder="дд.мм.гггг" required></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="tc_end_date"><strong>Дата окончания разработки тест-кейсов</strong></label>
+                    <textarea class="form-control" id="tc_end_date" name="tc_end_date" rows="2"
+                        placeholder="дд.мм.гггг" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="tc_execution_end_date"><strong>Дата окончания выполнения тест-кейсов</strong></label>
+                    <textarea class="form-control" id="tc_execution_end_date" name="tc_execution_end_date" rows="2"
+                        placeholder="дд.мм.гггг" required></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="epic"><strong>Эпик</strong></label>
+                    <textarea class="form-control" id="epic" name="epic" rows="2" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="developer_name"><strong>Имя разработчика</strong></label>
+                    <textarea class="form-control" id="developer_name" name="developer_name" rows="2"
+                        required></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="test_case_developed_by"><strong>Тест-кейсы разработал</strong></label>
+                    <textarea class="form-control" id="test_case_developed_by" name="test_case_developed_by"
+                        rows="2" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="test_case_reviewed_by"><strong>Тест-кейсы проверил</strong></label>
+                    <textarea class="form-control" id="test_case_reviewed_by" name="test_case_reviewed_by" rows="2"
+                        required></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="user_story"><strong>Пользовательская история</strong></label>
+                    <textarea class="form-control" id="user_story" name="user_story" rows="3" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="test_scenario"><strong>Тестовый сценарий</strong></label>
+                    <textarea class="form-control" id="test_scenario" name="test_scenario" rows="3"
+                        required></textarea>
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field field-full">
+                    <label for="test_case_executed_by"><strong>Тестирование выполнил</strong></label>
+                    <textarea class="form-control" id="test_case_executed_by" name="test_case_executed_by" rows="2"
+                        required></textarea>
+                </div>
+            </div>
+
+            <!-- Панель действий над таблицей -->
+            <div class="table-toolbar">
+                <button type="button" class="add-button" onclick="addRow()">+ Добавить тест-кейс</button>
+                <button type="button" class="clear-button" onclick="clearAll()">Очистить форму</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="summary-table" id="testCaseTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">№</th>
+                            <th style="min-width: 100px;">ID тест-кейса</th>
+                            <th style="min-width: 110px;">Тип тестирования</th>
+                            <th style="min-width: 100px;">Функция</th>
+                            <th style="min-width: 120px;">Название тест-кейса</th>
+                            <th style="min-width: 120px;">Ожидаемый результат</th>
+                            <th style="min-width: 120px;">Фактический результат</th>
+                            <th style="min-width: 100px;">Тестовые данные</th>
+                            <th style="min-width: 160px;">Шаги воспроизведения</th>
+                            <th style="min-width: 150px;">Скриншот бага</th>
+                            <th style="min-width: 110px;">Итоговый статус</th>
+                            <th style="width: 80px;">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Строки создаются динамически -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h1>Подсчёт тест-кейсов</h1>
+            <div class="counter-grid">
+                <div class="field">
+                    <label for="pass"><strong>Пройдено</strong></label>
+                    <textarea class="form-control counter" id="pass" name="pass" rows="1" readonly>0</textarea>
+                </div>
+                <div class="field">
+                    <label for="fail"><strong>Не пройдено</strong></label>
+                    <textarea class="form-control counter" id="fail" name="fail" rows="1" readonly>0</textarea>
+                </div>
+                <div class="field">
+                    <label for="not_executed"><strong>Не выполнено</strong></label>
+                    <textarea class="form-control counter" id="not_executed" name="not_executed" rows="1"
+                        readonly>0</textarea>
+                </div>
+                <div class="field">
+                    <label for="out_of_scope"><strong>Вне области</strong></label>
+                    <textarea class="form-control counter" id="out_of_scope" name="out_of_scope" rows="1"
+                        readonly>0</textarea>
+                </div>
+                <div class="field">
+                    <label for="total"><strong>Всего</strong></label>
+                    <textarea class="form-control counter" id="total" name="total" rows="1" readonly>0</textarea>
+                </div>
+            </div>
+
+            <input type="submit" class="btn btn-success" value="Сформировать отчёт">
+        </form>
+    </div>
+
+    <div id="reportSection">
+        <h1>Отчёт</h1>
+        <div id="reportContent"></div>
+        <button type="button" id="downloadBtn" class="btn-download">Скачать PDF</button>
+    </div>
+
     <script>
-        let testCaseCount = 1; // Counter for the number of test cases
+        /* ============================================================
+           КОНСТАНТЫ
+        ============================================================ */
+        const STORAGE_KEY = 'manualTestingDataSheet_v1';
 
-        function addRow() {
-            testCaseCount++;
-            const table = document.getElementById("testCaseTable").getElementsByTagName('tbody')[0];
-            const row = table.insertRow(-1); // Insert a new row at the end
+        const MAIN_FIELD_LABELS = [
+            ['product_name', 'Название продукта'],
+            ['tc_start_date', 'Дата начала разработки тест-кейсов'],
+            ['tc_execution_start_date', 'Дата начала выполнения тест-кейсов'],
+            ['tc_end_date', 'Дата окончания разработки тест-кейсов'],
+            ['tc_execution_end_date', 'Дата окончания выполнения тест-кейсов'],
+            ['epic', 'Эпик'],
+            ['developer_name', 'Имя разработчика'],
+            ['test_case_developed_by', 'Тест-кейсы разработал'],
+            ['test_case_reviewed_by', 'Тест-кейсы проверил'],
+            ['user_story', 'Пользовательская история'],
+            ['test_scenario', 'Тестовый сценарий'],
+            ['test_case_executed_by', 'Тестирование выполнил']
+        ];
 
-            row.innerHTML = `
-                <td>${testCaseCount}</td>
-                <td><input type="text" class="form-control" name="testcase_id_${testCaseCount}" required></td>
-                <td><input type="text" class="form-control" name="type_of_testing_${testCaseCount}"></td>
-                <td><input type="text" class="form-control" name="features_${testCaseCount}"></td>
-                <td><input type="text" class="form-control" name="test_cases_${testCaseCount}"></td>
-                <td><input type="text" class="form-control" name="expected_result_${testCaseCount}"></td>
-                <td><input type="text" class="form-control" name="actual_result_${testCaseCount}"></td>
-                <td><input type="text" class="form-control" name="test_data_${testCaseCount}"></td>
-                <td><textarea class="form-control" name="reproducing_steps_${testCaseCount}"></textarea></td>
-                <td><input type="file" class="form-control" name="bug_screenshot_${testCaseCount}"></td>
-                <td>
-                    <select class="form-control" name="final_status_${testCaseCount}" onchange="updateCounts()">
-                        <option value="">Select Status</option>
-                        <option value="pass">Pass</option>
-                        <option value="fail">Fail</option>
-                        <option value="not_executed">Not Executed</option>
-                        <option value="out_of_scope">Out of Scope</option>
-                    </select>
-                </td>
-                <td><button type="button" class="btn remove-button" onclick="removeRow(this)">Remove</button></td>
-            `;
-            updateCounts(); // Update counts after adding a new row
+        const ROW_FIELD_LABELS = [
+            ['testcase_id', 'ID тест-кейса'],
+            ['type_of_testing', 'Тип тестирования'],
+            ['features', 'Функция'],
+            ['test_cases', 'Название тест-кейса'],
+            ['expected_result', 'Ожидаемый результат'],
+            ['actual_result', 'Фактический результат'],
+            ['test_data', 'Тестовые данные'],
+            ['reproducing_steps', 'Шаги воспроизведения'],
+            ['bug_screenshot', 'Скриншот бага'],
+            ['final_status', 'Итоговый статус']
+        ];
+
+        const STATUS_LABELS = {
+            pass: 'Пройден',
+            fail: 'Не пройден',
+            not_executed: 'Не выполнен',
+            out_of_scope: 'Вне области'
+        };
+
+        /* ============================================================
+           HTML-экранирование
+        ============================================================ */
+        function escapeHtml(value) {
+            return String(value === undefined || value === null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/\n/g, '<br>');
+        }
+
+        /* ============================================================
+           СОХРАНЕНИЕ / ВОССТАНОВЛЕНИЕ (localStorage)
+        ============================================================ */
+        function saveData() {
+            const data = { fields: {}, rows: [] };
+
+            MAIN_FIELD_LABELS.forEach(function (pair) {
+                const el = document.querySelector('[name="' + pair[0] + '"]');
+                if (el) data.fields[pair[0]] = el.value;
+            });
+
+            document.querySelectorAll('#testCaseTable tbody tr').forEach(function (tr) {
+                const row = {};
+                tr.querySelectorAll('[data-field]').forEach(function (el) {
+                    if (el.type === 'file') return;
+                    row[el.dataset.field] = el.value;
+                });
+                row.screenshot_name = tr.dataset.screenshotName || '';
+                data.rows.push(row);
+            });
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.warn('Не удалось сохранить данные:', e);
+            }
+        }
+
+        function restoreData() {
+            let raw = null;
+            try {
+                raw = localStorage.getItem(STORAGE_KEY);
+            } catch (e) {
+                return false;
+            }
+            if (!raw) return false;
+
+            let data;
+            try {
+                data = JSON.parse(raw);
+            } catch (e) {
+                return false;
+            }
+            if (!data) return false;
+
+            if (data.fields) {
+                Object.keys(data.fields).forEach(function (name) {
+                    const el = document.querySelector('[name="' + name + '"]');
+                    if (el) el.value = data.fields[name];
+                });
+            }
+
+            const tbody = document.querySelector('#testCaseTable tbody');
+            tbody.innerHTML = '';
+            if (Array.isArray(data.rows) && data.rows.length) {
+                data.rows.forEach(function (rowData) {
+                    tbody.appendChild(createRow(rowData));
+                });
+            } else {
+                tbody.appendChild(createRow());
+            }
+
+            renumberRows();
+            updateCounts();
+            return true;
+        }
+
+        /* ============================================================
+           ТАБЛИЦА ТЕСТ-КЕЙСОВ
+        ============================================================ */
+        function createRow(data) {
+            data = data || {};
+
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td class="row-number"></td>' +
+                '<td><textarea class="form-control" data-field="testcase_id" rows="2" required></textarea></td>' +
+                '<td><textarea class="form-control" data-field="type_of_testing" rows="2"></textarea></td>' +
+                '<td><textarea class="form-control" data-field="features" rows="2"></textarea></td>' +
+                '<td><textarea class="form-control" data-field="test_cases" rows="2"></textarea></td>' +
+                '<td><textarea class="form-control" data-field="expected_result" rows="2"></textarea></td>' +
+                '<td><textarea class="form-control" data-field="actual_result" rows="2"></textarea></td>' +
+                '<td><textarea class="form-control" data-field="test_data" rows="2"></textarea></td>' +
+                '<td><textarea class="form-control" data-field="reproducing_steps" rows="2"></textarea></td>' +
+                '<td>' +
+                '  <input type="file" class="form-control-file" data-field="bug_screenshot" accept="image/*">' +
+                '  <small class="file-status"></small>' +
+                '</td>' +
+                '<td>' +
+                '  <select class="form-control" data-field="final_status">' +
+                '    <option value="">Выберите статус</option>' +
+                '    <option value="pass">Пройден</option>' +
+                '    <option value="fail">Не пройден</option>' +
+                '    <option value="not_executed">Не выполнен</option>' +
+                '    <option value="out_of_scope">Вне области</option>' +
+                '  </select>' +
+                '</td>' +
+                '<td><button type="button" class="btn remove-button" onclick="removeRow(this)">Удалить</button></td>';
+
+            Object.keys(data).forEach(function (key) {
+                if (key === 'screenshot_name') return;
+                const el = tr.querySelector('[data-field="' + key + '"]');
+                if (el && el.type !== 'file') el.value = data[key] || '';
+            });
+
+            const fileInput = tr.querySelector('[data-field="bug_screenshot"]');
+            const fileStatus = tr.querySelector('.file-status');
+
+            if (data.screenshot_name) {
+                tr.dataset.screenshotName = data.screenshot_name;
+                fileStatus.textContent = 'Ранее выбранный файл: ' + data.screenshot_name +
+                    ' (при необходимости выберите заново)';
+            }
+
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files.length > 0) {
+                    const name = this.files[0].name;
+                    tr.dataset.screenshotName = name;
+                    fileStatus.textContent = '✔ Файл успешно загружен: ' + name;
+                } else {
+                    delete tr.dataset.screenshotName;
+                    fileStatus.textContent = '';
+                }
+            });
+
+            tr.querySelector('[data-field="final_status"]').addEventListener('change', function () {
+                updateCounts();
+            });
+
+            return tr;
+        }
+
+        function addRow(data) {
+            const tbody = document.querySelector('#testCaseTable tbody');
+            tbody.appendChild(createRow(data));
+            renumberRows();
+            updateCounts();
+            saveData();
+        }
+
+        function removeRow(button) {
+            const row = button.parentNode.parentNode;
+            const tbody = row.parentNode;
+            if (tbody.querySelectorAll('tr').length <= 1) {
+                alert('Нельзя удалить единственный тест-кейс.');
+                return;
+            }
+            row.parentNode.removeChild(row);
+            renumberRows();
+            updateCounts();
+            saveData();
+        }
+
+        function renumberRows() {
+            const rows = document.querySelectorAll('#testCaseTable tbody tr');
+            rows.forEach(function (tr, index) {
+                tr.querySelector('.row-number').textContent = index + 1;
+            });
+            updateRemoveButtons();
+        }
+
+        function updateRemoveButtons() {
+            const rows = document.querySelectorAll('#testCaseTable tbody tr');
+            const disable = rows.length <= 1;
+            rows.forEach(function (tr) {
+                const btn = tr.querySelector('.remove-button');
+                if (btn) {
+                    btn.disabled = disable;
+                    btn.title = disable ? 'Нельзя удалить единственный тест-кейс' : '';
+                }
+            });
         }
 
         function updateCounts() {
@@ -141,245 +826,356 @@
             let notExecutedCount = 0;
             let outOfScopeCount = 0;
 
-            const table = document.getElementById("testCaseTable");
-            const rows = table.rows;
+            document.querySelectorAll('#testCaseTable tbody tr').forEach(function (tr) {
+                const status = tr.querySelector('[data-field="final_status"]').value;
+                if (status === 'pass') passCount++;
+                else if (status === 'fail') failCount++;
+                else if (status === 'not_executed') notExecutedCount++;
+                else if (status === 'out_of_scope') outOfScopeCount++;
+            });
 
-            // Loop through each row in the table to calculate counts
-            for (let i = 1; i < rows.length; i++) {
-                const finalStatus = rows[i].cells[12].querySelector('select').value;
-                if (finalStatus === 'pass') passCount++;
-                else if (finalStatus === 'fail') failCount++;
-                else if (finalStatus === 'not_executed') notExecutedCount++;
-                else if (finalStatus === 'out_of_scope') outOfScopeCount++;
+            document.querySelector('[name="pass"]').value = passCount;
+            document.querySelector('[name="fail"]').value = failCount;
+            document.querySelector('[name="not_executed"]').value = notExecutedCount;
+            document.querySelector('[name="out_of_scope"]').value = outOfScopeCount;
+            document.querySelector('[name="total"]').value =
+                passCount + failCount + notExecutedCount + outOfScopeCount;
+        }
+
+        /* ============================================================
+           ФОРМИРОВАНИЕ ОТЧЁТА
+        ============================================================ */
+        function buildReport() {
+            let html = '<h4>Отчёт по форме ручного тестирования</h4>';
+            html += '<p><strong>Дата формирования:</strong> ' +
+                escapeHtml(new Date().toLocaleString('ru-RU')) + '</p>';
+
+            MAIN_FIELD_LABELS.forEach(function (pair) {
+                const el = document.querySelector('[name="' + pair[0] + '"]');
+                const value = el ? el.value : '';
+                html += '<p><strong>' + pair[1] + ':</strong> ' +
+                    (value ? escapeHtml(value) : '—') + '</p>';
+            });
+
+            html += '<h5>Тест-кейсы</h5>';
+
+            const rows = document.querySelectorAll('#testCaseTable tbody tr');
+            if (!rows.length) {
+                html += '<p>Тест-кейсы не добавлены.</p>';
             }
 
-            // Update the respective input fields for counts
-            document.querySelector('input[name="pass"]').value = passCount;
-            document.querySelector('input[name="fail"]').value = failCount;
-            document.querySelector('input[name="not_executed"]').value = notExecutedCount;
-            document.querySelector('input[name="out_of_scope"]').value = outOfScopeCount;
-            document.querySelector('input[name="total"]').value = passCount + failCount + notExecutedCount + outOfScopeCount; // Update total count
-        }
+            rows.forEach(function (tr, index) {
+                html += '<p><strong>Тест-кейс №' + (index + 1) + '</strong><br>';
 
-        function removeRow(button) {
-            const row = button.parentNode.parentNode;
-            row.parentNode.removeChild(row);
-            recalculateRowNumbers(); // Recalculate row numbers after removal
-            updateCounts(); // Update counts after removing a row
-        }
+                ROW_FIELD_LABELS.forEach(function (pair) {
+                    const field = pair[0];
+                    const label = pair[1];
+                    let value = '';
 
-        function recalculateRowNumbers() {
-            const rows = document.getElementById("testCaseTable").rows;
-            testCaseCount = 0; // Reset counter to recalculate
-            for (let i = 1; i < rows.length; i++) {
-                rows[i].cells[0].innerText = i; // Update the SL column
-                testCaseCount++; // Increment the counter
-            }
-        }
+                    if (field === 'bug_screenshot') {
+                        value = tr.dataset.screenshotName || '';
+                    } else if (field === 'final_status') {
+                        const raw = tr.querySelector('[data-field="final_status"]').value;
+                        value = STATUS_LABELS[raw] || '';
+                    } else {
+                        const el = tr.querySelector('[data-field="' + field + '"]');
+                        value = el ? el.value : '';
+                    }
 
-        // Handle form submission for report generation
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelector("form").onsubmit = function (event) {
-                event.preventDefault(); // Prevent default form submission
-
-                let report = "<h4>Form Submission Report</h4>";
-                report += "<strong>Product Name:</strong> " + document.querySelector('input[name="product_name"]').value + "<br>";
-                report += "<strong>Test Case Start Date:</strong> " + document.querySelector('input[name="tc_start_date"]').value + "<br>";
-                report += "<strong>Test Case Execution Start Date:</strong> " + document.querySelector('input[name="tc_execution_start_date"]').value + "<br>";
-                report += "<strong>Test Case End Date:</strong> " + document.querySelector('input[name="tc_end_date"]').value + "<br>";
-                report += "<strong>Test Case Execution End Date:</strong> " + document.querySelector('input[name="tc_execution_end_date"]').value + "<br>";
-                report += "<strong>Epic:</strong> " + document.querySelector('input[name="epic"]').value + "<br>";
-                report += "<strong>Developer Name:</strong> " + document.querySelector('input[name="developer_name"]').value + "<br>";
-                report += "<strong>Test Case Executed By:</strong> " + document.querySelector('input[name="test_case_executed_by"]').value + "<br>";
-
-                report += "<h5>Test Cases:</h5>";
-                const rows = document.querySelectorAll("#testCaseTable tbody tr");
-                rows.forEach(row => {
-                    report += "<p>";
-                    const inputs = row.querySelectorAll("input, select");
-                    inputs.forEach(input => {
-                        report += "<strong>" + input.name.replace(/_/g, " ").replace(/final status/i, "Final Status") + ":</strong> " + input.value + "<br>";
-                    });
-                    report += "</p>";
+                    html += '<strong>' + label + ':</strong> ' +
+                        (value ? escapeHtml(value) : '—') + '<br>';
                 });
 
-                // Show Report
-                document.getElementById("reportContent").innerHTML = report;
-                document.getElementById("reportSection").style.display = "block"; // Show the report section
-                
-                // Add a download button in the report section
-                const downloadBtn = document.createElement('button');
-                downloadBtn.innerText = "Download PDF";
-                downloadBtn.classList.add("btn-download");
-                downloadBtn.onclick = function () {
-                    downloadPDF(report);
-                };
-                document.getElementById("reportSection").appendChild(downloadBtn);
-            };
+                html += '</p>';
+            });
 
-            function downloadPDF(reportContent) {
-                const pdf = new jsPDF();
-                
-                // Add the report content as plain text
-                pdf.fromHTML(reportContent, 15, 15, {
-                    'width': 170
-                });
-                pdf.save('submission_report.pdf'); // Save as PDF
+            html += '<h5>Итоги</h5>';
+            html += '<p>' +
+                '<strong>Пройдено:</strong> ' + document.querySelector('[name="pass"]').value + '; ' +
+                '<strong>Не пройдено:</strong> ' + document.querySelector('[name="fail"]').value + '; ' +
+                '<strong>Не выполнено:</strong> ' + document.querySelector('[name="not_executed"]').value + '; ' +
+                '<strong>Вне области:</strong> ' + document.querySelector('[name="out_of_scope"]').value + '; ' +
+                '<strong>Всего:</strong> ' + document.querySelector('[name="total"]').value +
+                '</p>';
+
+            return html;
+        }
+
+        /* ============================================================
+           ЭКСПОРТ В PDF (через canvas — кириллица сохраняется)
+        ============================================================ */
+        function downloadPDF() {
+            const reportEl = document.getElementById('reportContent');
+            const btn = document.getElementById('downloadBtn');
+
+            if (!reportEl.innerHTML.trim()) {
+                alert('Сначала сформируйте отчёт.');
+                return;
             }
-        });
+
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Формирование PDF...';
+
+            html2canvas(reportEl, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            }).then(function (canvas) {
+                const jsPDFCtor = window.jspdf.jsPDF;
+                const pdf = new jsPDFCtor('p', 'mm', 'a4');
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 10;
+
+                const imgWidth = pageWidth - margin * 2;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+                let heightLeft = imgHeight;
+                let position = margin;
+
+                pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - margin * 2);
+
+                while (heightLeft > 0) {
+                    position -= (pageHeight - margin * 2);
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+                    heightLeft -= (pageHeight - margin * 2);
+                }
+
+                pdf.save('otchet_po_testirovaniyu.pdf');
+            }).catch(function (err) {
+                console.error(err);
+                alert('Не удалось сформировать PDF. Попробуйте ещё раз.');
+            }).finally(function () {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            });
+        }
+
+        /* ============================================================
+           ОЧИСТКА
+        ============================================================ */
+        function clearAll() {
+            if (!confirm('Удалить все введённые данные и сохранённый черновик?')) return;
+
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (e) { /* игнорируем */ }
+
+            document.getElementById('testForm').reset();
+            document.querySelector('#testCaseTable tbody').innerHTML = '';
+            document.getElementById('reportContent').innerHTML = '';
+            document.getElementById('reportSection').style.display = 'none';
+
+            addRow();
+        }
+
+        /* ============================================================
+           ИНИЦИАЛИЗАЦИЯ ФОРМЫ
+        ============================================================ */
+        (function initForm() {
+            const form = document.getElementById('testForm');
+
+            form.addEventListener('input', saveData);
+            form.addEventListener('change', saveData);
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                document.getElementById('reportContent').innerHTML = buildReport();
+
+                const section = document.getElementById('reportSection');
+                section.style.display = 'block';
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+
+            if (!restoreData()) {
+                addRow();
+            }
+        })();
+
+        /* ============================================================
+           WEBGL ФОН (тлеющие угли)
+           При недоступности WebGL / reduced-motion — мягкий фолбэк.
+        ============================================================ */
+        (function initBackground() {
+            const canvas = document.getElementById('bg-gl');
+            if (!canvas) return;
+
+            const gl = canvas.getContext('webgl', {
+                alpha: false,
+                antialias: false,
+                depth: false,
+                stencil: false,
+                powerPreference: 'low-power'
+            }) || canvas.getContext('experimental-webgl');
+
+            if (!gl) {
+                canvas.style.display = 'none';
+                return;
+            }
+
+            const vertexSrc = `
+                attribute vec2 a_pos;
+                void main() {
+                    gl_Position = vec4(a_pos, 0.0, 1.0);
+                }
+            `;
+
+            const fragmentSrc = `
+                precision mediump float;
+                uniform float u_time;
+                uniform vec2 u_resolution;
+
+                float hash(vec2 p) {
+                    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+                }
+
+                float noise(vec2 p) {
+                    vec2 i = floor(p);
+                    vec2 f = fract(p);
+                    vec2 u = f * f * (3.0 - 2.0 * f);
+                    return mix(
+                        mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                        u.y
+                    );
+                }
+
+                float fbm(vec2 p) {
+                    float v = 0.0;
+                    float a = 0.5;
+                    for (int i = 0; i < 5; i++) {
+                        v += a * noise(p);
+                        p *= 2.02;
+                        a *= 0.5;
+                    }
+                    return v;
+                }
+
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                    vec2 p = uv;
+                    p.x *= u_resolution.x / u_resolution.y;
+
+                    float t = u_time * 0.05;
+
+                    float n1 = fbm(p * 2.2 + vec2(t, -t * 0.7));
+                    float n2 = fbm(p * 3.4 + vec2(-t * 0.6, t * 0.4) + n1);
+                    float n3 = fbm(p * 1.2 + vec2(t * 0.3, t * 0.2));
+
+                    vec3 cBase  = vec3(0.055, 0.035, 0.022); // почти чёрный
+                    vec3 cEmber = vec3(0.36, 0.11, 0.035);   // тлеющий уголь
+                    vec3 cAmber = vec3(0.58, 0.34, 0.07);    // янтарь
+                    vec3 cRed   = vec3(0.34, 0.05, 0.05);    // глубокий красный
+
+                    vec3 col = mix(cBase, cEmber, smoothstep(0.20, 0.92, n1));
+                    col = mix(col, cAmber, smoothstep(0.55, 1.00, n2) * 0.35);
+                    col = mix(col, cRed,   smoothstep(0.30, 0.90, n3) * 0.50);
+
+                    // виньетка
+                    vec2 v = uv - 0.5;
+                    float vig = smoothstep(0.95, 0.25, length(v));
+                    col *= vig;
+
+                    // лёгкое зерно
+                    float g = hash(gl_FragCoord.xy + u_time) * 0.03;
+                    col += g - 0.015;
+
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `;
+
+            function compile(type, src) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, src);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.warn('Shader error:', gl.getShaderInfoLog(shader));
+                    return null;
+                }
+                return shader;
+            }
+
+            const vs = compile(gl.VERTEX_SHADER, vertexSrc);
+            const fs = compile(gl.FRAGMENT_SHADER, fragmentSrc);
+            if (!vs || !fs) { canvas.style.display = 'none'; return; }
+
+            const program = gl.createProgram();
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.linkProgram(program);
+
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.warn('Program link error:', gl.getProgramInfoLog(program));
+                canvas.style.display = 'none';
+                return;
+            }
+
+            gl.useProgram(program);
+
+            // Полноэкранный треугольник
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array([-1, -1, 3, -1, -1, 3]),
+                gl.STATIC_DRAW
+            );
+
+            const aPos = gl.getAttribLocation(program, 'a_pos');
+            gl.enableVertexAttribArray(aPos);
+            gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+            const uTime = gl.getUniformLocation(program, 'u_time');
+            const uRes = gl.getUniformLocation(program, 'u_resolution');
+
+            function resize() {
+                const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+                const w = Math.floor(window.innerWidth * dpr);
+                const h = Math.floor(window.innerHeight * dpr);
+                if (canvas.width !== w || canvas.height !== h) {
+                    canvas.width = w;
+                    canvas.height = h;
+                    gl.viewport(0, 0, w, h);
+                }
+            }
+
+            resize();
+            window.addEventListener('resize', resize, { passive: true });
+
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const startTime = performance.now();
+            let rafId = 0;
+
+            function frame(now) {
+                resize();
+                const elapsed = (now - startTime) / 1000;
+                gl.uniform1f(uTime, elapsed);
+                gl.uniform2f(uRes, canvas.width, canvas.height);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                if (!reducedMotion) {
+                    rafId = requestAnimationFrame(frame);
+                }
+            }
+
+            rafId = requestAnimationFrame(frame);
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                    cancelAnimationFrame(rafId);
+                } else if (!reducedMotion) {
+                    rafId = requestAnimationFrame(frame);
+                }
+            });
+        })();
     </script>
-</head>
-
-<body>
-    <div class="container-fluid">
-        <h1>Manual Testing Data Sheet Form</h1>
-        <form>
-            <div class="form-group">
-                <label for="product_name"><strong>Product Name</strong></label>
-                <input type="text" class="form-control" name="product_name" required>
-            </div>
-
-            <div class="form-group row">
-                <div class="col">
-                    <label for="tc_start_date"><strong>TC Start Date</strong></label>
-                    <input type="date" class="form-control" name="tc_start_date" required>
-                </div>
-                <div class="col">
-                    <label for="tc_execution_start_date"><strong>TC Execution Start Date</strong></label>
-                    <input type="date" class="form-control" name="tc_execution_start_date" required>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <div class="col">
-                    <label for="tc_end_date"><strong>TC End Date</strong></label>
-                    <input type="date" class="form-control" name="tc_end_date" required>
-                </div>
-                <div class="col">
-                    <label for="tc_execution_end_date"><strong>TC Execution End Date</strong></label>
-                    <input type="date" class="form-control" name="tc_execution_end_date" required>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <div class="col">
-                    <label for="epic"><strong>Epic</strong></label>
-                    <input type="text" class="form-control" name="epic" required>
-                </div>
-                <div class="col">
-                    <label for="developer_name"><strong>Developer Name</strong></label>
-                    <input type="text" class="form-control" name="developer_name" required>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <div class="col">
-                    <label for="test_case_developed_by"><strong>Test Case Developed By</strong></label>
-                    <input type="text" class="form-control" name="test_case_developed_by" required>
-                </div>
-                <div class="col">
-                    <label for="test_case_reviewed_by"><strong>Test Case Reviewed By</strong></label>
-                    <input type="text" class="form-control" name="test_case_reviewed_by" required>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <div class="col">
-                    <label for="user_story"><strong>User Story</strong></label>
-                    <textarea class="form-control" name="user_story" required></textarea>
-                </div>
-                <div class="col">
-                    <label for="test_scenario"><strong>Test Scenario</strong></label>
-                    <textarea class="form-control" name="test_scenario" required></textarea>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="test_case_executed_by"><strong>Test Case Executed By</strong></label>
-                <input type="text" class="form-control" name="test_case_executed_by" required>
-            </div>
-
-            <table class="table summary-table" id="testCaseTable">
-                <thead>
-                    <tr>
-                        <th>#SL</th>
-                        <th>Testcase ID</th>
-                        <th>Type of Testing</th>
-                        <th>Feature</th>
-                        <th>Test Case Name</th>
-                        <th>Expected Result</th>
-                        <th>Actual Result</th>
-                        <th>Test Data</th>
-                        <th style="width: 20%;">Reproducing Steps</th>
-                        <th style="width: 100px;">Bug Screenshot</th>
-                        <th style="width: 9%;">Final Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td><input type="text" class="form-control" name="testcase_id_1" required></td>
-                        <td><input type="text" class="form-control" name="type_of_testing_1"></td>
-                        <td><input type="text" class="form-control" name="features_1"></td>
-                        <td><input type="text" class="form-control" name="test_cases_1"></td>
-                        <td><input type="text" class="form-control" name="expected_result_1"></td>
-                        <td><input type="text" class="form-control" name="actual_result_1"></td>
-                        <td><input type="text" class="form-control" name="test_data_1"></td>
-                        <td><textarea class="form-control" name="reproducing_steps_1"></textarea></td>
-                        <td><input type="file" class="form-control" name="bug_screenshot_1"></td>
-                        <td>
-                            <select class="form-control" name="final_status_1" onchange="updateCounts()">
-                                <option value="">Select Status</option>
-                                <option value="pass">Pass</option>
-                                <option value="fail">Fail</option>
-                                <option value="not_executed">Not Executed</option>
-                                <option value="out_of_scope">Out of Scope</option>
-                            </select>
-                        </td>
-                        <td><button type="button" class="btn remove-button" onclick="removeRow(this)">Remove</button></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <button type="button" class="btn add-button" onclick="addRow()">Add Test Case</button>
-
-            <h1>Test Case Counting</h1>
-            <div class="form-group row container">
-                <div class="col">
-                    <label for="pass"><strong>Pass</strong></label>
-                    <input type="text" class="form-control" name="pass" value="0" required readonly>
-                </div>
-                <div class="col">
-                    <label for="fail"><strong>Fail</strong></label>
-                    <input type="text" class="form-control" name="fail" value="0" required readonly>
-                </div>
-                <div class="col">
-                    <label for="not_executed"><strong>Not Executed</strong></label>
-                    <input type="text" class="form-control" name="not_executed" value="0" required readonly>
-                </div>
-                <div class="col">
-                    <label for="out_of_scope"><strong>Out of Scope</strong></label>
-                    <input type="text" class="form-control" name="out_of_scope" value="0" required readonly>
-                </div>
-                <div class="col">
-                    <label for="total"><strong>Total</strong></label>
-                    <input type="text" class="form-control" name="total" value="0" required readonly>
-                </div>
-            </div>
-
-            <input type="submit" class="btn btn-success btn-block mt-4" value="Submit">
-        </form>
-    </div>
-
-    <div id="reportSection">
-        <h1>Submission Report</h1>
-        <div id="reportContent"></div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>
