@@ -40,7 +40,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* WebGL background canvas */
         #bg-gl {
             position: fixed;
             inset: 0;
@@ -51,7 +50,6 @@
             display: block;
         }
 
-        /* ============================= PANEL ============================= */
         .container-fluid {
             position: relative;
             max-width: 1500px;
@@ -77,7 +75,6 @@
             opacity: .55;
         }
 
-        /* ============================= HEADINGS ============================= */
         h1 {
             margin: 0 0 28px;
             text-align: center;
@@ -103,7 +100,6 @@
             filter: none;
         }
 
-        /* ============================= FORM FIELDS ============================= */
         .field-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -149,9 +145,7 @@
 
         .form-control::placeholder { color: rgba(200, 180, 160, .4); }
 
-        .form-control:hover:not(:focus) {
-            border-color: rgba(255, 209, 102, .25);
-        }
+        .form-control:hover:not(:focus) { border-color: rgba(255, 209, 102, .25); }
 
         .form-control:focus {
             outline: none;
@@ -163,21 +157,10 @@
             color: #fff;
         }
 
-        textarea.form-control {
-            resize: vertical;
-            min-height: 44px;
-        }
+        textarea.form-control { resize: vertical; min-height: 44px; }
+        select.form-control { cursor: pointer; }
+        select.form-control option { background: #1a1410; color: var(--text); }
 
-        select.form-control {
-            cursor: pointer;
-        }
-
-        select.form-control option {
-            background: #1a1410;
-            color: var(--text);
-        }
-
-        /* File input */
         input[type="file"].form-control-file {
             width: 100%;
             font-size: .74rem;
@@ -210,7 +193,17 @@
             word-break: break-word;
         }
 
-        /* ============================= TOOLBAR & BUTTONS ============================= */
+        /* Превью загруженного скриншота в таблице */
+        .screenshot-preview { margin-top: 6px; }
+        .screenshot-preview img {
+            display: block;
+            max-width: 100%;
+            max-height: 90px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 209, 102, .35);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
+        }
+
         .table-toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -312,12 +305,8 @@
             border-color: rgba(229, 72, 77, .8);
         }
 
-        .remove-button:disabled {
-            opacity: .4;
-            cursor: not-allowed;
-        }
+        .remove-button:disabled { opacity: .4; cursor: not-allowed; }
 
-        /* ============================= TABLE ============================= */
         .table-responsive {
             overflow-x: auto;
             overflow-y: hidden;
@@ -372,12 +361,8 @@
             color: var(--gold-soft);
         }
 
-        .summary-table textarea.form-control {
-            font-size: .8rem;
-            min-height: 40px;
-        }
+        .summary-table textarea.form-control { font-size: .8rem; min-height: 40px; }
 
-        /* ============================= COUNTERS ============================= */
         .counter-grid {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -402,7 +387,6 @@
             cursor: default;
         }
 
-        /* ============================= REPORT ============================= */
         #reportSection {
             display: none;
             max-width: 1100px;
@@ -424,24 +408,13 @@
             filter: none;
         }
 
-        #reportContent {
-            padding: 10px 4px;
-            color: #000;
-            background: #ffffff;
-        }
-
-        #reportContent h4,
-        #reportContent h5 { color: #000; }
-
+        #reportContent { padding: 10px 4px; color: #000; background: #ffffff; }
+        #reportContent h4, #reportContent h5 { color: #000; }
         #reportContent p { margin-bottom: 10px; }
 
-        /* ============================= SCROLLBARS ============================= */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, .3); }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 209, 102, .25);
-            border-radius: 10px;
-        }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 209, 102, .25); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255, 209, 102, .45); }
 
         @media (max-width: 640px) {
@@ -476,7 +449,6 @@
                     <textarea class="form-control" id="tc_execution_start_date" name="tc_execution_start_date"
                         rows="2" placeholder="дд.мм.гггг" required></textarea>
                 </div>
-
                 <div class="field">
                     <label for="tc_end_date"><strong>Дата окончания разработки тест-кейсов</strong></label>
                     <textarea class="form-control" id="tc_end_date" name="tc_end_date" rows="2"
@@ -528,7 +500,6 @@
                 </div>
             </div>
 
-            <!-- Панель действий над таблицей -->
             <div class="table-toolbar">
                 <button type="button" class="add-button" onclick="addRow()">+ Добавить тест-кейс</button>
                 <button type="button" class="clear-button" onclick="clearAll()">Очистить форму</button>
@@ -599,6 +570,7 @@
            КОНСТАНТЫ
         ============================================================ */
         const STORAGE_KEY = 'manualTestingDataSheet_v1';
+        const MAX_IMAGE_PERSIST_BYTES = 600000; // ~600 КБ base64 на изображение
 
         const MAIN_FIELD_LABELS = [
             ['product_name', 'Название продукта'],
@@ -665,13 +637,20 @@
                     row[el.dataset.field] = el.value;
                 });
                 row.screenshot_name = tr.dataset.screenshotName || '';
+
+                /* Сохраняем только небольшие изображения, чтобы не превысить квоту localStorage */
+                const dataUrl = tr.dataset.screenshotData || '';
+                if (dataUrl && dataUrl.length < MAX_IMAGE_PERSIST_BYTES) {
+                    row.screenshot_data = dataUrl;
+                }
+
                 data.rows.push(row);
             });
 
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             } catch (e) {
-                console.warn('Не удалось сохранить данные:', e);
+                console.warn('Не удалось сохранить данные в localStorage:', e);
             }
         }
 
@@ -734,6 +713,7 @@
                 '<td>' +
                 '  <input type="file" class="form-control-file" data-field="bug_screenshot" accept="image/*">' +
                 '  <small class="file-status"></small>' +
+                '  <div class="screenshot-preview"></div>' +
                 '</td>' +
                 '<td>' +
                 '  <select class="form-control" data-field="final_status">' +
@@ -747,28 +727,63 @@
                 '<td><button type="button" class="btn remove-button" onclick="removeRow(this)">Удалить</button></td>';
 
             Object.keys(data).forEach(function (key) {
-                if (key === 'screenshot_name') return;
+                if (key === 'screenshot_name' || key === 'screenshot_data') return;
                 const el = tr.querySelector('[data-field="' + key + '"]');
                 if (el && el.type !== 'file') el.value = data[key] || '';
             });
 
             const fileInput = tr.querySelector('[data-field="bug_screenshot"]');
             const fileStatus = tr.querySelector('.file-status');
+            const preview = tr.querySelector('.screenshot-preview');
 
-            if (data.screenshot_name) {
-                tr.dataset.screenshotName = data.screenshot_name;
-                fileStatus.textContent = 'Ранее выбранный файл: ' + data.screenshot_name +
-                    ' (при необходимости выберите заново)';
+            function setPreview(dataUrl, name) {
+                if (dataUrl) {
+                    preview.innerHTML =
+                        '<img src="' + dataUrl + '" alt="' + escapeHtml(name || 'Скриншот') + '">';
+                } else {
+                    preview.innerHTML = '';
+                }
             }
 
+            /* Восстановленные из localStorage данные */
+            if (data.screenshot_data) {
+                tr.dataset.screenshotData = data.screenshot_data;
+                tr.dataset.screenshotName = data.screenshot_name || '';
+                fileStatus.textContent = '✔ Файл успешно загружен: ' +
+                    (data.screenshot_name || 'изображение');
+                setPreview(data.screenshot_data, data.screenshot_name);
+            } else if (data.screenshot_name) {
+                tr.dataset.screenshotName = data.screenshot_name;
+                fileStatus.textContent = 'Ранее выбранный файл: ' + data.screenshot_name +
+                    ' (выберите заново, чтобы показать в отчёте)';
+            }
+
+            /* Чтение файла в Data URL — именно это делает скриншот видимым в отчёте */
             fileInput.addEventListener('change', function () {
                 if (this.files && this.files.length > 0) {
-                    const name = this.files[0].name;
+                    const file = this.files[0];
+                    const name = file.name;
+
                     tr.dataset.screenshotName = name;
-                    fileStatus.textContent = '✔ Файл успешно загружен: ' + name;
+                    fileStatus.textContent = '⏳ Чтение файла: ' + name;
+
+                    const reader = new FileReader();
+                    reader.onload = function (ev) {
+                        const dataUrl = ev.target.result;
+                        tr.dataset.screenshotData = dataUrl;
+                        fileStatus.textContent = '✔ Файл успешно загружен: ' + name;
+                        setPreview(dataUrl, name);
+                        saveData();
+                    };
+                    reader.onerror = function () {
+                        fileStatus.textContent = '⚠ Не удалось прочитать файл: ' + name;
+                    };
+                    reader.readAsDataURL(file);
                 } else {
                     delete tr.dataset.screenshotName;
+                    delete tr.dataset.screenshotData;
                     fileStatus.textContent = '';
+                    setPreview('', '');
                 }
             });
 
@@ -870,11 +885,29 @@
                 ROW_FIELD_LABELS.forEach(function (pair) {
                     const field = pair[0];
                     const label = pair[1];
-                    let value = '';
 
+                    /* --- Скриншот бага: вставляем реальное изображение --- */
                     if (field === 'bug_screenshot') {
-                        value = tr.dataset.screenshotName || '';
-                    } else if (field === 'final_status') {
+                        const dataUrl = tr.dataset.screenshotData || '';
+                        const name = tr.dataset.screenshotName || '';
+
+                        if (dataUrl) {
+                            html += '<strong>' + label + ':</strong>' +
+                                (name ? ' ' + escapeHtml(name) : '') +
+                                '<br><img src="' + dataUrl + '" alt="Скриншот бага" ' +
+                                'style="display:block;max-width:100%;max-height:420px;' +
+                                'margin:6px 0 10px;border:1px solid #ccc;border-radius:8px;">';
+                        } else if (name) {
+                            html += '<strong>' + label + ':</strong> ' + escapeHtml(name) +
+                                ' <em>(изображение недоступно — выберите файл заново)</em><br>';
+                        } else {
+                            html += '<strong>' + label + ':</strong> —<br>';
+                        }
+                        return;
+                    }
+
+                    let value = '';
+                    if (field === 'final_status') {
                         const raw = tr.querySelector('[data-field="final_status"]').value;
                         value = STATUS_LABELS[raw] || '';
                     } else {
@@ -902,7 +935,7 @@
         }
 
         /* ============================================================
-           ЭКСПОРТ В PDF (через canvas — кириллица сохраняется)
+           ЭКСПОРТ В PDF (через canvas — кириллица и картинки сохраняются)
         ============================================================ */
         function downloadPDF() {
             const reportEl = document.getElementById('reportContent');
@@ -920,7 +953,9 @@
             html2canvas(reportEl, {
                 scale: 2,
                 backgroundColor: '#ffffff',
-                useCORS: true
+                useCORS: true,
+                allowTaint: false,
+                imageTimeout: 15000
             }).then(function (canvas) {
                 const jsPDFCtor = window.jspdf.jsPDF;
                 const pdf = new jsPDFCtor('p', 'mm', 'a4');
@@ -980,7 +1015,14 @@
         (function initForm() {
             const form = document.getElementById('testForm');
 
-            form.addEventListener('input', saveData);
+            /* input — дебаунс, чтобы не сериализовать base64 на каждое нажатие */
+            let saveTimer = null;
+            form.addEventListener('input', function () {
+                if (saveTimer) clearTimeout(saveTimer);
+                saveTimer = setTimeout(saveData, 250);
+            });
+
+            /* change — сохраняем сразу (файлы, select) */
             form.addEventListener('change', saveData);
 
             form.addEventListener('submit', function (event) {
@@ -1002,7 +1044,6 @@
 
         /* ============================================================
            WEBGL ФОН (тлеющие угли)
-           При недоступности WebGL / reduced-motion — мягкий фолбэк.
         ============================================================ */
         (function initBackground() {
             const canvas = document.getElementById('bg-gl');
@@ -1070,21 +1111,19 @@
                     float n2 = fbm(p * 3.4 + vec2(-t * 0.6, t * 0.4) + n1);
                     float n3 = fbm(p * 1.2 + vec2(t * 0.3, t * 0.2));
 
-                    vec3 cBase  = vec3(0.055, 0.035, 0.022); // почти чёрный
-                    vec3 cEmber = vec3(0.36, 0.11, 0.035);   // тлеющий уголь
-                    vec3 cAmber = vec3(0.58, 0.34, 0.07);    // янтарь
-                    vec3 cRed   = vec3(0.34, 0.05, 0.05);    // глубокий красный
+                    vec3 cBase  = vec3(0.055, 0.035, 0.022);
+                    vec3 cEmber = vec3(0.36, 0.11, 0.035);
+                    vec3 cAmber = vec3(0.58, 0.34, 0.07);
+                    vec3 cRed   = vec3(0.34, 0.05, 0.05);
 
                     vec3 col = mix(cBase, cEmber, smoothstep(0.20, 0.92, n1));
                     col = mix(col, cAmber, smoothstep(0.55, 1.00, n2) * 0.35);
                     col = mix(col, cRed,   smoothstep(0.30, 0.90, n3) * 0.50);
 
-                    // виньетка
                     vec2 v = uv - 0.5;
                     float vig = smoothstep(0.95, 0.25, length(v));
                     col *= vig;
 
-                    // лёгкое зерно
                     float g = hash(gl_FragCoord.xy + u_time) * 0.03;
                     col += g - 0.015;
 
@@ -1120,7 +1159,6 @@
 
             gl.useProgram(program);
 
-            // Полноэкранный треугольник
             const buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
             gl.bufferData(
